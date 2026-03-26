@@ -61,6 +61,8 @@ public class FilmController {
             film.setDuration(newFilm.getDuration());
         }
 
+        log.info("Обновлен фильм с id={}", film.getId());
+
         return film;
     }
 

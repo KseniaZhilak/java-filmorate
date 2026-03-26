@@ -51,26 +51,28 @@ public class UserController {
     @PutMapping
     public User update(@Valid @RequestBody UpdateUserRequest newUser) {
         User user = findUserOrThrow(newUser.getId());
-            if (newUser.getEmail() != null) {
-                if (newUser.getEmail().equals(user.getEmail())) {
-                    throw new DuplicatedDataException("Этот имейл уже используется");
-                }
-                user.setEmail(newUser.getEmail());
+        if (newUser.getEmail() != null) {
+            if (newUser.getEmail().equals(user.getEmail())) {
+                throw new DuplicatedDataException("Этот имейл уже используется");
             }
+            user.setEmail(newUser.getEmail());
+        }
 
-            if (newUser.getName() != null) {
-                user.setName(newUser.getName());
-            }
+        if (newUser.getName() != null) {
+            user.setName(newUser.getName());
+        }
 
-            if (newUser.getLogin() != null) {
-                user.setLogin(newUser.getLogin());
-            }
+        if (newUser.getLogin() != null) {
+            user.setLogin(newUser.getLogin());
+        }
 
-            if(newUser.getBirthday() != null) {
-                user.setBirthday(newUser.getBirthday());
-            }
+        if (newUser.getBirthday() != null) {
+            user.setBirthday(newUser.getBirthday());
+        }
 
-            return user;
+        log.info("Обновлен пользователь с id={}", user.getId());
+
+        return user;
     }
 
     private long getNextId() {
