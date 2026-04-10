@@ -12,9 +12,16 @@ import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,8 +32,14 @@ class FilmorateApplicationTests {
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController(null);
-        userController = new UserController(null);
+        FilmStorage filmStorage = new InMemoryFilmStorage();
+        UserStorage userStorage = new InMemoryUserStorage();
+
+        UserService userService = new UserService(userStorage);
+        FilmService filmService = new FilmService(filmStorage, userService);
+
+        filmController = new FilmController(filmService);
+        userController = new UserController(userService);
     }
 
     @Test
@@ -129,6 +142,108 @@ class FilmorateApplicationTests {
                 () -> userController.update(update));
     }
 
+    @Test
+    void shouldAddFriend() {
+        User user1 = createUser("a@mail.com");
+        User user2 = createUser("b@mail.com");
+
+        userController.addFriend(user1.getId(), user2.getId());
+
+        List<User> friendsOfUser1 = userController.getFriends(user1.getId());
+
+        assertEquals(1, friendsOfUser1.size());
+        assertEquals(user2.getId(), friendsOfUser1.getFirst().getId());
+    }
+
+    @Test
+    void shouldRemoveFriend() {
+        User user1 = createUser("a@mail.com");
+        User user2 = createUser("b@mail.com");
+
+        userController.addFriend(user1.getId(), user2.getId());
+        userController.removeFriend(user1.getId(), user2.getId());
+
+        List<User> friends = userController.getFriends(user1.getId());
+
+        assertTrue(friends.isEmpty());
+    }
+
+    @Test
+    void shouldReturnFriends() {
+        User user1 = createUser("a@mail.com");
+        User user2 = createUser("b@mail.com");
+
+        userController.addFriend(user1.getId(), user2.getId());
+
+        List<User> friends = userController.getFriends(user1.getId());
+
+        assertEquals(1, friends.size());
+    }
+
+    @Test
+    void shouldReturnCommonFriends() {
+        User user1 = createUser("a@mail.com");
+        User user2 = createUser("b@mail.com");
+        User user3 = createUser("c@mail.com");
+
+        userController.addFriend(user1.getId(), user3.getId());
+        userController.addFriend(user2.getId(), user3.getId());
+
+        List<User> common = userController.getCommonFriends(user1.getId(), user2.getId());
+
+        assertEquals(1, common.size());
+        assertEquals(user3.getId(), common.getFirst().getId());
+    }
+
+    @Test
+    void shouldAddLike() {
+        Film film = createFilm();
+        User user = createUser("a@mail.com");
+
+        filmController.addLike(film.getId(), user.getId());
+
+        Collection<Film> popular = filmController.findAll(10);
+
+        Film result = popular.iterator().next();
+
+        assertEquals(1, result.getLikes().size());
+    }
+
+    @Test
+    void shouldRemoveLike() {
+        Film film = createFilm();
+        User user = createUser("a@mail.com");
+
+        filmController.addLike(film.getId(), user.getId());
+        filmController.deleteLike(film.getId(), user.getId());
+
+        Collection<Film> popular = filmController.findAll(10);
+
+        Film result = popular.iterator().next();
+
+        assertEquals(0, result.getLikes().size());
+    }
+
+    @Test
+    void shouldReturnMostPopularFilms() {
+        Film film1 = createFilm();
+        Film film2 = createFilm();
+
+        User user1 = createUser("a@mail.com");
+        User user2 = createUser("b@mail.com");
+
+        filmController.addLike(film1.getId(), user1.getId());
+        filmController.addLike(film1.getId(), user2.getId());
+
+        filmController.addLike(film2.getId(), user1.getId());
+
+        Collection<Film> popular = filmController.findAll(10);
+
+        Film first = popular.iterator().next();
+
+        assertEquals(film1.getId(), first.getId());
+    }
+
     private CreateFilmRequest buildFilm() {
         CreateFilmRequest request = new CreateFilmRequest();
         request.setName("Film");
@@ -146,4 +261,23 @@ class FilmorateApplicationTests {
         request.setBirthday(LocalDate.of(2000, 1, 1));
         return request;
     }
+
+    private User createUser(String email) {
+        CreateUserRequest user = new CreateUserRequest();
+        user.setEmail(email);
+        user.setLogin("login");
+        user.setName("name");
+        user.setBirthday(LocalDate.of(2000, 1, 1));
+        return userController.create(user);
+    }
+
+    private Film createFilm() {
+        CreateFilmRequest film = new CreateFilmRequest();
+        film.setName("Film");
+        film.setDescription("Desc");
+        film.setDuration(100);
+        film.setReleaseDate(LocalDate.of(2020, 1, 1));
+        return filmController.create(film);
+    }
+
 }
