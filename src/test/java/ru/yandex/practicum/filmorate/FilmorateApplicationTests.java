@@ -26,7 +26,7 @@ class FilmorateApplicationTests {
     @BeforeEach
     void setUp() {
         filmController = new FilmController();
-        userController = new UserController();
+        userController = new UserController(null);
     }
 
     @Test
