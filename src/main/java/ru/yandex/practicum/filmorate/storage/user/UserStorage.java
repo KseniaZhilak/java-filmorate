@@ -9,12 +9,13 @@ public interface UserStorage {
 
     Collection<User> findAll();
 
+    Optional<User> findById(Long id);
+
     User create(User user);
 
     User update(User user);
 
-    void delete(Long id);
+    void delete(User user);
 
-    Optional<User> findById(Long id);
 
 }
