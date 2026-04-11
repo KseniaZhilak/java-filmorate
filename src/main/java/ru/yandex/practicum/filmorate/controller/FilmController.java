@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 @RestController
 @RequestMapping("/films")
@@ -38,7 +37,6 @@ public class FilmController {
         film.setDescription(request.getDescription());
         film.setDuration(request.getDuration());
         film.setReleaseDate(request.getReleaseDate());
-        film.setLikes(new HashSet<>());
 
         return filmService.create(film);
     }

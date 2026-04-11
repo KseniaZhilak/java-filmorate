@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 
 @RestController
@@ -43,7 +42,6 @@ public class UserController {
         user.setLogin(request.getLogin());
         user.setName(request.getName());
         user.setBirthday(request.getBirthday());
-        user.setFriends(new HashSet<>());
 
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
