@@ -40,15 +40,16 @@ public class FilmService {
     public void addLike(long filmId, long userId) {
         Film film = getById(filmId);
         User user = userService.getById(userId);
-        film.getLikes().add(user.getId());
-        filmStorage.update(film);
+
+        filmStorage.saveLike(film, user);
+
     }
 
     public void deleteLike(long filmId, long userId) {
         Film film = getById(filmId);
         User user = userService.getById(userId);
-        film.getLikes().remove(user.getId());
-        filmStorage.update(film);
+
+        filmStorage.deleteLike(film, user);
     }
 
     public Collection<Film> findByCount(int count) {

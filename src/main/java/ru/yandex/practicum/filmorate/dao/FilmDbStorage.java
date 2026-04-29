@@ -7,6 +7,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.sql.Date;
@@ -73,7 +74,6 @@ public class FilmDbStorage implements FilmStorage {
         }, keyHolder);
 
         film.setId(keyHolder.getKey().longValue());
-        saveLikes(film);
         return film;
     }
 
@@ -91,7 +91,7 @@ public class FilmDbStorage implements FilmStorage {
                 film.getDuration(),
                 film.getId()
         );
-        saveLikes(film);
+
         return film;
     }
 
@@ -110,14 +110,19 @@ public class FilmDbStorage implements FilmStorage {
         return film;
     }
 
-    private void saveLikes(Film film) {
-        jdbcTemplate.update("DELETE FROM film_likes WHERE film_id = ?", film.getId());
-        for (Long userId : film.getLikes()) {
-            jdbcTemplate.update(
-                    "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)",
-                    film.getId(),
-                    userId
-            );
-        }
+    @Override
+    public void saveLike(Film film, User user) {
+        jdbcTemplate.update(
+                "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)",
+                film.getId(),
+                user.getId());
+
+    }
+
+    @Override
+    public void deleteLike(Film film, User user) {
+        jdbcTemplate.update(
+                "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?", film.getId(), user.getId()
+        );
     }
 }
