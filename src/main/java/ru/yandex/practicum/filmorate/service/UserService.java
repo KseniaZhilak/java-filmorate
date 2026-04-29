@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -13,7 +14,7 @@ public class UserService {
 
     private final UserStorage userStorage;
 
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -38,16 +39,15 @@ public class UserService {
         User user = getById(userId);
         User friend = getById(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        userStorage.saveFriend(user, friend);
     }
 
     public void removeFriend(Long userId, Long friendId) {
         User user = getById(userId);
         User friend = getById(friendId);
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        userStorage.deleteFriend(user, friend);
+
     }
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
