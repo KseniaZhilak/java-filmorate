@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -10,21 +10,19 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import java.util.Collection;
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
 
+    private final GenreService genreService;
     private final FilmStorage filmStorage;
     private final UserService userService;
-
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, UserService userService) {
-        this.filmStorage = filmStorage;
-        this.userService = userService;
-    }
 
     public Collection<Film> findAll() {
         return filmStorage.findAll();
     }
 
     public Film create(Film film) {
+        verifyGenres(film);
         return filmStorage.create(film);
     }
 
@@ -58,6 +56,13 @@ public class FilmService {
                         f2.getLikes().size(), f1.getLikes().size()
                 ))
                 .limit(count).toList();
+    }
+
+    private void verifyGenres(Film film) {
+        if (film.getGenres() == null) {
+            return;
+        }
+        film.getGenres().forEach(e -> genreService.getById(e.getId()));
     }
 
 }

@@ -37,6 +37,7 @@ public class FilmController {
         film.setDescription(request.getDescription());
         film.setDuration(request.getDuration());
         film.setReleaseDate(request.getReleaseDate());
+        film.setGenres(request.getGenres());
 
         return filmService.create(film);
     }

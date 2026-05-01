@@ -6,8 +6,10 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.annotations.DateAfter;
+import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 public class CreateFilmRequest {
@@ -26,5 +28,7 @@ public class CreateFilmRequest {
 
     @Positive(message = "Продолжительность должна быть положительным числом")
     private Integer duration;
+
+    private Set<Genre> genres;
 
 }
