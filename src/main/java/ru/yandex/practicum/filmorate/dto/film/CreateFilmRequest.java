@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.annotations.DateAfter;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -30,5 +31,7 @@ public class CreateFilmRequest {
     private Integer duration;
 
     private Set<Genre> genres;
+
+    private Mpa mpa;
 
 }

@@ -16,12 +16,14 @@ public class FilmService {
     private final GenreService genreService;
     private final FilmStorage filmStorage;
     private final UserService userService;
+    private final MpaService mpaService;
 
     public Collection<Film> findAll() {
         return filmStorage.findAll();
     }
 
     public Film create(Film film) {
+        verifyMpa(film);
         verifyGenres(film);
         return filmStorage.create(film);
     }
@@ -64,5 +66,12 @@ public class FilmService {
         }
         film.getGenres().forEach(e -> genreService.getById(e.getId()));
     }
+
+    private void verifyMpa(Film film) {
+        if (film.getMpa() != null) {
+            mpaService.getById(film.getMpa().getId());
+        }
+    }
+
 
 }

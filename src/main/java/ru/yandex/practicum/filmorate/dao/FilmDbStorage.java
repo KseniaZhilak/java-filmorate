@@ -9,8 +9,8 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.GenreService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.sql.Date;
@@ -29,7 +29,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String ADD_GENRES_TO_FILM_QUERY = "INSERT INTO film_genres(film_id, genre_id) VALUES (?, ?)";
 
     private final JdbcTemplate jdbcTemplate;
-    
+
     private final RowMapper<Film> filmMapper = (rs, rowNum) -> {
         Film film = new Film();
         film.setId(rs.getLong("id"));
@@ -38,13 +38,26 @@ public class FilmDbStorage implements FilmStorage {
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setDuration(rs.getInt("duration"));
         film.setGenres(new HashSet<>());
+
+        long mpaId = rs.getLong("mpa_id");
+        if (!rs.wasNull()) {
+            Mpa mpa = new Mpa();
+            mpa.setId(mpaId);
+            mpa.setName(rs.getString("mpa_name"));
+            film.setMpa(mpa);
+        }
+
         return film;
     };
+
+    private static final String SELECT_FILMS =
+            "SELECT f.id, f.name, f.description, f.release_date, f.duration, f.mpa_id, m.name AS mpa_name " +
+                    "FROM films f LEFT JOIN mpa_ratings m ON f.mpa_id = m.id";
 
     @Override
     public Collection<Film> findAll() {
         return jdbcTemplate.query(
-                        "SELECT id, name, description, release_date, duration FROM films ORDER BY id",
+                        SELECT_FILMS + " ORDER BY f.id",
                         filmMapper
                 ).stream()
                 .map(this::loadGenres)
@@ -55,7 +68,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Optional<Film> findById(Long id) {
         return jdbcTemplate.query(
-                        "SELECT id, name, description, release_date, duration FROM films WHERE id = ?",
+                        SELECT_FILMS + " WHERE f.id = ?",
                         filmMapper,
                         id
                 ).stream()
@@ -70,13 +83,18 @@ public class FilmDbStorage implements FilmStorage {
 
         jdbcTemplate.update(connection -> {
             PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO films (name, description, release_date, duration) VALUES (?, ?, ?, ?)",
+                    "INSERT INTO films (name, description, release_date, duration, mpa_id) VALUES (?, ?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS
             );
             statement.setString(1, film.getName());
             statement.setString(2, film.getDescription());
             statement.setDate(3, Date.valueOf(film.getReleaseDate()));
             statement.setInt(4, film.getDuration());
+            if (film.getMpa() != null) {
+                statement.setLong(5, film.getMpa().getId());
+            } else {
+                statement.setNull(5, java.sql.Types.INTEGER);
+            }
             return statement;
         }, keyHolder);
 
@@ -90,13 +108,14 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(
                 """
                         UPDATE films
-                        SET name = ?, description = ?, release_date = ?, duration = ?
+                        SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ?
                         WHERE id = ?
                         """,
                 film.getName(),
                 film.getDescription(),
                 Date.valueOf(film.getReleaseDate()),
                 film.getDuration(),
+                film.getMpa() != null ? film.getMpa().getId() : null,
                 film.getId()
         );
 

@@ -38,6 +38,7 @@ public class FilmController {
         film.setDuration(request.getDuration());
         film.setReleaseDate(request.getReleaseDate());
         film.setGenres(request.getGenres());
+        film.setMpa(request.getMpa());
 
         return filmService.create(film);
     }
@@ -56,6 +57,9 @@ public class FilmController {
         }
         if (newFilm.getDuration() != null) {
             film.setDuration(newFilm.getDuration());
+        }
+        if (newFilm.getMpa() != null) {
+            film.setMpa(newFilm.getMpa());
         }
 
         return filmService.update(film);

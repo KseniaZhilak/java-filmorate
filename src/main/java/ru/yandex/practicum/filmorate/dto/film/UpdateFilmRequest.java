@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.annotations.DateAfter;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
 
@@ -27,5 +28,7 @@ public class UpdateFilmRequest {
 
     @Positive(message = "Продолжительность должна быть положительным числом")
     private Integer duration;
+
+    private Mpa mpa;
 
 }
