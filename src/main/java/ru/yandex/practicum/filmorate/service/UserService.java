@@ -53,11 +53,7 @@ public class UserService {
     public List<User> getCommonFriends(Long userId, Long otherId) {
         User user = getById(userId);
         User other = getById(otherId);
-
-        return user.getFriends().stream()
-                .filter(other.getFriends()::contains)
-                .map(this::getById)
-                .toList();
+        return userStorage.getCommonFriends(user, other);
     }
 
     public List<User> getFriends(Long userId) {
