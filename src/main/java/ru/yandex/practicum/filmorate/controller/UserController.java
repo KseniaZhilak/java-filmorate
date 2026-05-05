@@ -1,29 +1,36 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.user.CreateUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private final Map<Long, User> users = new HashMap<>();
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public Collection<User> findAll() {
-        return users.values();
+        return userService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public User findById(@PathVariable("id") long userId) {
+        return userService.getById(userId);
     }
 
     @PostMapping
@@ -40,17 +47,12 @@ public class UserController {
             user.setName(user.getLogin());
         }
 
-        user.setId(getNextId());
-        users.put(user.getId(), user);
-
-        log.info("Создан пользователь с id={}", user.getId());
-
-        return user;
+        return userService.create(user);
     }
 
     @PutMapping
     public User update(@Valid @RequestBody UpdateUserRequest newUser) {
-        User user = findUserOrThrow(newUser.getId());
+        User user = userService.getById(newUser.getId());
         if (newUser.getEmail() != null) {
             if (newUser.getEmail().equals(user.getEmail())) {
                 throw new DuplicatedDataException("Этот имейл уже используется");
@@ -69,24 +71,30 @@ public class UserController {
         if (newUser.getBirthday() != null) {
             user.setBirthday(newUser.getBirthday());
         }
-
-        log.info("Обновлен пользователь с id={}", user.getId());
-
-        return user;
+        return userService.update(user);
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable Long id,
+                          @PathVariable Long friendId) {
+        userService.addFriend(id, friendId);
     }
 
-    private User findUserOrThrow(Long id) {
-        return Optional.ofNullable(users.get(id))
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void removeFriend(@PathVariable Long id,
+                             @PathVariable Long friendId) {
+        userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable Long id) {
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable Long id,
+                                       @PathVariable Long otherId) {
+        return userService.getCommonFriends(id, otherId);
     }
 
 }
